@@ -17,10 +17,22 @@ urls = ["https://tutoring.csc.calpoly.edu/",
         "https://web.calpoly.edu/~wish/pages/officers.html",
         "https://web.calpoly.edu/~wish/index.html",
         "http://cplug.org/projects.html",
-        "https://thewhitehat.club/",
+        "https://thewhitehat.club//about",
         "https://thewhitehat.club/officers",
         "https://www.slohacks.com/"
         ]
+
+
+
+def debug(func):
+    """Print the function signature and return value"""
+    @functools.wraps(func)
+    def wrapper_debug(*args, **kwargs):
+        print(f"Calling {func.__name__}")
+        value = func(*args, **kwargs)
+        print(value)
+        return value
+    return wrapper_debug
 
 
 def get_clubs_and_contact_info(div):
@@ -35,30 +47,44 @@ r = requests.get(urls[2])
 
 soup = BeautifulSoup(r.text, 'html.parser')
 
-
+@debug
 def CS_get_club_info(soup):
     for div in soup.find_all('div', attrs={'class': 'accordion'}):
         csse = div.find('h2', attrs={'id':
                     'Computer_Science_and_Software_Engineering'})
         if csse:
+            csse = csse.text
             return get_clubs_and_contact_info(div), csse
+
 
 CS_get_club_info(soup)
 
+
 def stat_get_club_info(h):
     club = h.find_all('td')
+    club_info = {}
+    counter = 0
+    text = ""
+    extract = ["Contact", "President", "Advisor"]
+    curr = 0
     for info in club:
-        print(info.string)
+        counter += 1
+        text += " " + info.string
+        if counter % 3 == 0:
+            club_info[extract[curr]] = text
+            text = ""
+            curr += 1
+    return club_info
 
 
 def get_data_science_info(h):
-    stat_get_club_info(h.findNext('table'))
+    return stat_get_club_info(h.findNext('table'))
 
 
 def get_stat_club_info(h):
-    stat_get_club_info(h.findNext('table').findNext('table'))
+    return stat_get_club_info(h.findNext('table').findNext('table'))
 
-
+@debug
 def statistics_deparment_info(soup):
     h = soup.find('h2', attrs={'id': 'Statistics_Department'})
     club_links = []
@@ -67,26 +93,20 @@ def statistics_deparment_info(soup):
         if 'Club' in str(tag.string):
             stat_clubs.append(tag.string)
             club_links.append(tag.find('a')['href'])
-    get_data_science_info(h)
-    get_stat_club_info(h)
+    data_science = get_data_science_info(h)
+    stat_club = get_stat_club_info(h)
+    links = {}
     for idx, club in enumerate(club_links):
-        print(stat_clubs[idx], club)
+        links[stat_clubs[idx]] = club
+    links['Data Science'] = data_science
+    links['Stat Club'] = stat_club
+
+    return links
 
 
 r = requests.get(urls[4])
 soup = BeautifulSoup(r.text, 'html.parser')
-#statistics_deparment_info(soup)
-
-
-def debug(func):
-    """Print the function signature and return value"""
-    @functools.wraps(func)
-    def wrapper_debug(*args, **kwargs):
-        print(f"Calling {func.__name__}")
-        value = func(*args, **kwargs)
-        print(value)
-        return value
-    return wrapper_debug
+statistics_deparment_info(soup)
 
 
 @debug
@@ -113,45 +133,49 @@ def _get_officers(info):
 def extract_statistics_deparment_info(soup):
     main_content = soup.find('div', class_='field-items')
     stat_info = main_content.find_next('p')
-    print(stat_info.text)
+    stat_club = {}
+    stat_club['about'] = stat_info.text
     titles = {
         "Upcoming Events": _get_upcoming_events,
         "Stat Buddy Program": _get_program,
         "2018-2019 STAT Club Officers": _get_officers,
         "2017-2018 STAT Club Officers": _get_officers
     }
+
     for title in main_content.find_all('h2'):
         function = titles.get(title.string)
         if function:
-            function(title.find_next_sibling())
-
+            stat_club[title.string] = function(title.find_next_sibling())
     advisors = main_content.find('h3').find_next()
-    print(advisors.text)
-    pass
+    stat_club["Advisors"] = advisors.text
+    return stat_club
 
 
 r = requests.get(urls[3])
 soup = BeautifulSoup(r.text, 'html.parser')
-#extract_statistics_deparment_info(soup)
+extract_statistics_deparment_info(soup)
 
 
 def extract_stat_tutoring(soup):
+    csse_tutoring = {}
     title = soup.find('h1', class_="page-title")
-    print(title.text)
+    csse_tutoring['title'] = title.text
     main_content = soup.find_all('div',class_='field-item')
     for x in main_content:
         if x:
-            print(x.text.strip())
+            csse_tutoring['info'] = x.text.strip()
 
     tutors = soup.find('div', class_='field-item').find('a')['href']
-    print(tutors)
+    csse_tutoring['tutors'] = tutors
     tutor_hours = soup.find('div', class_='field-item').find('img')['src']
-    print(tutor_hours)
+    csse_tutoring['tutor_hours'] = tutor_hours
+
+    return csse_tutoring
 
 
 r = requests.get(urls[5])
 soup = BeautifulSoup(r.text, 'html.parser')
-#extract_stat_tutoring(soup)
+extract_stat_tutoring(soup)
 
 
 def extract_tutoring_info(p):
@@ -162,25 +186,25 @@ def extract_tutoring_info(p):
         l = l.strip()
         if l:
             tutoring_center_info[keys[idx]] = l
-    print(line)
     return tutoring_center_info
 
-
+@debug
 def extract_tutoring_center(soup):
     hours = soup.find('iframe')['src']
     print(hours)
     div = soup.find('div', {'id': 'contentHeader'})
+    my_text = ""
     for p in div.find_all('p'):
         extract_tutoring_info(p.text)
-        print(p.text)
-    pass
+        my_text += p.text
+    return my_text
 
 
 r = requests.get(urls[8])
 soup = BeautifulSoup(r.text, 'html.parser')
-#extract_tutoring_center(soup)
+extract_tutoring_center(soup)
 
-
+@debug
 def extract_info_from_acm(soup):
     #TODO
     pass
@@ -188,7 +212,7 @@ def extract_info_from_acm(soup):
 
 r = requests.get(urls[9])
 soup = BeautifulSoup(r.text, 'html.parser')
-#extract_info_from_acm(soup)
+extract_info_from_acm(soup)
 
 @debug
 def extract_info_from_wish(soup):
@@ -205,33 +229,37 @@ def extract_info_from_wish(soup):
     wish['People'] = people
     wish['Adivsors'] = advisors_email
     wish['Location'] = "N/A"
-    wish_about = ''
-    for about in soup.find('div',class_="col-sm-8").find('p').text.split('\n'):
-        wish_about += about.strip()
-    wish['About'] = wish_about
     return wish
 
 
 r = requests.get(urls[10])
 soup = BeautifulSoup(r.text, 'html.parser')
-#extract_info_from_wish(soup)
+extract_info_from_wish(soup)
 
-
+@debug
 def extract_contact_from_wish(soup):
     contact = soup.find('div',class_='text-right')
-    return {"WISH Contact": contact.find('a').text.strip()}
+    wish = {}
+    wish_about = ''
+    for about in soup.find('div', class_="col-sm-8").find('p').text.split('\n'):
+        wish_about += about.strip()
+    wish['About'] = wish_about
+    wish["WISH Contact"] = contact.find('a').text.strip()
+    return wish
+
+
 
 
 r = requests.get(urls[11])
 soup = BeautifulSoup(r.text, 'html.parser')
-#extract_contact_from_wish(soup)
+extract_contact_from_wish(soup)
 
 @debug
 def extract_projects_from_cplug(soup):
     projects = dict()
     projects['CPLUG projects'] = []
     for x in soup.find_all('h1'):
-        projects['cplug projects'].append(x.text.strip())
+        projects['CPLUG projects'].append(x.text.strip())
     projects['Contact'] = "cplug@calpoly.edu"
     projects['Location'] = "N/A"
     return projects
@@ -239,19 +267,20 @@ def extract_projects_from_cplug(soup):
 
 r = requests.get(urls[12])
 soup = BeautifulSoup(r.text, 'html.parser')
-#extract_projects_from_cplug(soup)
+extract_projects_from_cplug(soup)
 
-
+@debug
 def extract_about_from_whitehat(soup):
     about = soup.find_all('div', class_='about-section')[-1]
     whitehat = {}
+
     whitehat['about'] = about.text
     return whitehat
 
 
 r = requests.get(urls[13])
 soup = BeautifulSoup(r.text, 'html.parser')
-#extract_about_from_whitehat(soup)
+extract_about_from_whitehat(soup)
 
 @debug
 def extract_officers_from_whitehat(soup):
@@ -270,7 +299,7 @@ def extract_officers_from_whitehat(soup):
 
 r = requests.get(urls[14])
 soup = BeautifulSoup(r.text, 'html.parser')
-#extract_officers_from_whitehat(soup)
+extract_officers_from_whitehat(soup)
 
 @debug
 def extract_slo_hacks(soup):
@@ -294,4 +323,4 @@ def extract_slo_hacks(soup):
 
 r = requests.get(urls[15])
 soup = BeautifulSoup(r.text, 'html.parser')
-#extract_slo_hacks(soup)
+extract_slo_hacks(soup)
