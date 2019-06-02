@@ -43,10 +43,7 @@ def CS_get_club_info(soup):
         if csse:
             return get_clubs_and_contact_info(div), csse
 
-#club_contact, csse = get_club_info(soup)
-#cscClub = CscClub(csse)
-#cscClub.clubs = club_contact
-
+CS_get_club_info(soup)
 
 def stat_get_club_info(h):
     club = h.find_all('td')
