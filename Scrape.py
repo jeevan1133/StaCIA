@@ -116,18 +116,25 @@ def _get_upcoming_events(info):
 
 def _get_program(info):
     program = ''
-    link = ''
+    advanced = info.find_next_sibling()
+    stat_form = []
     for content in info.contents:
         if isinstance(content, element.Tag):
-            program += content.string
-            link = content['href']
+            program += " visit " + content['href']
+            stat_form.append(content['href'])
         else:
             program += content
-    return program, link
+    stat_form.append(advanced.a['href'])
+    return program, stat_form
 
 
 def _get_officers(info):
-    return info.text, None
+    officers = {}
+    for item in info.text.split('\n'):
+        if item:
+            people = item.split(':')
+            officers[people[0]] = people[1]
+    return officers, None
 
 
 @debug
@@ -139,16 +146,19 @@ def extract_statistics_deparment_info(soup):
     titles = {
         "Upcoming Events": _get_upcoming_events,
         "Stat Buddy Program": _get_program,
-        "2018-2019 STAT Club Officers": _get_officers,
-        "2017-2018 STAT Club Officers": _get_officers
+        "2018-2019 STAT Club Officers": _get_officers
     }
 
     for title in main_content.find_all('h2'):
-        function = titles.get(title.string)
+        function = titles.get(title.string.strip())
+        if "2017-2018" in title.string:
+            stat_club["2017-2018 STAT Club Officers"], _ = _get_officers(title.find_next_sibling())
         if function:
-            stat_club[title.string], link = function(title.find_next_sibling())
+            info, link = function(title.find_next_sibling())
+            stat_club[title.string] = info
             if link:
-                stat_club['signup_for_mentor'] = link
+                stat_club['signup_for_mentor'] = link[1]
+                stat_club['signup_for_classes'] = link[0]
     advisors = main_content.find('h3').find_next()
     stat_club["Advisors"] = advisors.text
     return stat_club
@@ -247,6 +257,7 @@ def extract_contact_from_wish(soup):
         wish_about += about.strip()
     wish['About'] = wish_about
     wish["WISH Contact"] = contact.find('a').text.strip()
+    wish['Events'] = "https://web.calpoly.edu/~wish/pages/calendar.html"
     return wish
 
 
@@ -274,8 +285,7 @@ extract_projects_from_cplug(soup)
 @debug
 def extract_about_from_whitehat(soup):
     about = soup.find_all('div', class_='about-section')[-1]
-    whitehat = {}
-
+    whitehat = dict()
     whitehat['about'] = about.text
     return whitehat
 
