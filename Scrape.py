@@ -59,7 +59,7 @@ def CS_get_club_info(soup):
 
 CS_get_club_info(soup)
 
-
+@debug
 def stat_get_club_info(h):
     club = h.find_all('td')
     club_info = {}
@@ -83,6 +83,7 @@ def get_data_science_info(h):
 
 def get_stat_club_info(h):
     return stat_get_club_info(h.findNext('table').findNext('table'))
+
 
 @debug
 def statistics_deparment_info(soup):
@@ -109,27 +110,27 @@ soup = BeautifulSoup(r.text, 'html.parser')
 statistics_deparment_info(soup)
 
 
-@debug
 def _get_upcoming_events(info):
-    return info.string
+    return info.string, None
 
 
-@debug
 def _get_program(info):
     program = ''
+    link = ''
     for content in info.contents:
         if isinstance(content, element.Tag):
             program += content.string
+            link = content['href']
         else:
             program += content
-    return program
+    return program, link
+
+
+def _get_officers(info):
+    return info.text, None
 
 
 @debug
-def _get_officers(info):
-    return info.text
-
-
 def extract_statistics_deparment_info(soup):
     main_content = soup.find('div', class_='field-items')
     stat_info = main_content.find_next('p')
@@ -145,7 +146,9 @@ def extract_statistics_deparment_info(soup):
     for title in main_content.find_all('h2'):
         function = titles.get(title.string)
         if function:
-            stat_club[title.string] = function(title.find_next_sibling())
+            stat_club[title.string], link = function(title.find_next_sibling())
+            if link:
+                stat_club['signup_for_mentor'] = link
     advisors = main_content.find('h3').find_next()
     stat_club["Advisors"] = advisors.text
     return stat_club
@@ -155,7 +158,7 @@ r = requests.get(urls[3])
 soup = BeautifulSoup(r.text, 'html.parser')
 extract_statistics_deparment_info(soup)
 
-
+@debug
 def extract_stat_tutoring(soup):
     csse_tutoring = {}
     title = soup.find('h1', class_="page-title")
@@ -169,7 +172,6 @@ def extract_stat_tutoring(soup):
     csse_tutoring['tutors'] = tutors
     tutor_hours = soup.find('div', class_='field-item').find('img')['src']
     csse_tutoring['tutor_hours'] = tutor_hours
-
     return csse_tutoring
 
 
@@ -188,16 +190,16 @@ def extract_tutoring_info(p):
             tutoring_center_info[keys[idx]] = l
     return tutoring_center_info
 
+
 @debug
 def extract_tutoring_center(soup):
     hours = soup.find('iframe')['src']
-    print(hours)
+    tutoring_center = dict()
+    tutoring_center['Hours'] = hours
     div = soup.find('div', {'id': 'contentHeader'})
-    my_text = ""
-    for p in div.find_all('p'):
-        extract_tutoring_info(p.text)
-        my_text += p.text
-    return my_text
+    center = extract_tutoring_info(div.find('p').text)
+    tutoring_center.update(center)
+    return center
 
 
 r = requests.get(urls[8])
@@ -324,3 +326,4 @@ def extract_slo_hacks(soup):
 r = requests.get(urls[15])
 soup = BeautifulSoup(r.text, 'html.parser')
 extract_slo_hacks(soup)
+
