@@ -342,6 +342,42 @@ def getTutorNames():
    for Row in soup.find_all("h2"):
       arrTutors.append(Row.text)
    return arrTutors
+def getGameDesignDescript():
+   url = "http://www.cpgd.org/"
+   myRequest = requests.get(url)
+   soup = BeautifulSoup(myRequest.text, "html.parser")
+   i = 0
+   for Row in soup.find_all("div", {"class":"widget-content"}):
+      if (i ==1):
+         return Row.text
+      i+=1
+
+def getCPGDOfficers():
+   url = "http://www.cpgd.org/"
+   myRequest = requests.get(url)
+   posString = ""
+   officeDict = {}
+   soup = BeautifulSoup(myRequest.text, "html.parser")
+   for Row in soup.find_all("div", {"class":"widget TextList", "data-version":"1", "id":"TextList1"}):
+      posString = Row.text
+   officeList = posString.split('\n')[4:7]
+   for office in officeList[1:]:
+      formStr = office.split('(')
+      formList = list(formStr[1])
+      formList.pop()
+      officeDict[''.join(formList)] = formStr[0]
+   return (' '.join(officeList[0].split(' ')[0:2]), officeDict)
+
+def getCPGDFull():
+   extDict = getCPGDOfficers()
+   fullDict = {}
+   subDict = {}
+   subDict["About"] = getGameDesignDescript()
+   subDict["President"] = extDict[0]
+   subDict["Officers"] = extDict[1]
+   fullDict["Cal Poly Game Design"] = subDict
+   return fullDict
+print(getCPGDFull())
 
 def getFullTutorInfo():
    return {"Tutors":getTutorNames(), "Calendar":"https://tutoring.csc.calpoly.edu/schedule/"}
