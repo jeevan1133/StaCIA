@@ -332,6 +332,21 @@ def extract_slo_hacks(soup):
     workshop['Location'] = "N/A"
     return workshop
 
+def getTutorNames():
+   url = "http://tutoring.csc.calpoly.edu/tutors/"
+   myRequest = requests.get(url)
+   arrTutors = []
+   soup = BeautifulSoup(myRequest.text, "html.parser")
+   for Row in soup.find_all("h1", {"id":"head-tutor"}):
+      arrTutors.append(Row.text)
+   for Row in soup.find_all("h2"):
+      arrTutors.append(Row.text)
+   return arrTutors
+
+def getFullTutorInfo():
+   return {"Tutors":getTutorNames(), "Calendar":"https://tutoring.csc.calpoly.edu/schedule/"}
+
+
 
 r = requests.get(urls[15])
 soup = BeautifulSoup(r.text, 'html.parser')
