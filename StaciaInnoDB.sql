@@ -66,14 +66,10 @@ create table if not exists tutor(
   cost float not null,
   primary key (tid)) engine=InnoDB;
 
-create table if not exists tutorClasses(
-  classid integer auto_increment,
-  tid integer not null,
+create table if not exists department(
+  tid integer auto_increment,
   name varchar(200) not null,
-  primary key (classid),
-  foreign key (tid)
-    references tutor(tid)
-    on delete cascade) engine=InnoDB;
+  primary key (tid)) engine=InnoDB;
 
 create table if not exists tutorSchedule(
   schid integer auto_increment,
@@ -90,8 +86,8 @@ create table if not exists tutorExtraDump(
   extraid integer auto_increment,
   tid integer not null,
   keywords varchar(200),
-  data varchar(200),
+  data varchar(5000),
   primary key (extraid),
   foreign key (tid)
-    references tutor(tid)
+    references department(tid)
     on delete cascade) engine=InnoDB;
