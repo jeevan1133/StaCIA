@@ -414,6 +414,49 @@ def getPolyAppDevContact():
          return Row.text
       i+=1
 
+def getRoboticsDescript():
+   url = "http://calpolyrobotics.com"
+   myRequest = requests.get(url)
+   i = 0
+   soup = BeautifulSoup(myRequest.text, "html.parser")
+   for Row in soup.find_all("p", {"style":"white-space:pre-wrap;"}):
+      return Row.text
+      i+=1
+
+def getRoboticsOfficers():
+   url = "http://calpolyrobotics.com/contact"
+   myRequest = requests.get(url)
+   i = 0
+   soup = BeautifulSoup(myRequest.text, "html.parser")
+   retDict = {}
+   for Row in soup.find_all("p", {"class":"text-align-center"}):
+      if (i == 0):
+         pres = Row.text.split(' - ')
+         retDict[pres[1]] = pres[0]
+      if (i==1):
+         currDict = {}
+         pos = Row.text.split(' - ')
+         currDict[pos[1]] = pos[0]
+         retDict["Officers"] = currDict
+         return retDict
+      i+=1
+
+def getRoboticsLocation():
+   url = "http://calpolyrobotics.com/contact"
+   myRequest = requests.get(url)
+   i = 0
+   soup = BeautifulSoup(myRequest.text, "html.parser")
+   for Row in soup.find_all("div", {"class":"footer-inner"}):
+      return Row.text
+
+def getRoboticsInfoFull():
+   fullDict = {}
+   subDict = {}
+   subDict["Description"] = getRoboticsDescript()
+   subDict["Location"] = getRoboticsLocation()
+   subDict.update(getRoboticsOfficers())
+   fullDict["Cal Poly Robotics Club"] = subDict
+   return subDict
 
 
 
