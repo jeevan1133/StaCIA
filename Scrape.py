@@ -382,6 +382,39 @@ print(getCPGDFull())
 def getFullTutorInfo():
    return {"Tutors":getTutorNames(), "Calendar":"https://tutoring.csc.calpoly.edu/schedule/"}
 
+def getPolyAppDevOfficers():
+   url = "http://www.polyappdev.club"
+   myRequest = requests.get(url)
+   i = 0
+   office = []
+   posDict = {}
+   soup = BeautifulSoup(myRequest.text, "html.parser")
+   for Row in soup.find_all("div", {"class":"col-lg-3 col-md-6 text-center"}):
+      if (i<4):
+         i+=1
+         continue
+      office.append(Row.text.strip('\n'))
+   pres = office[0].split('\n')
+   posDict[pres[1]] = pres[0]
+   subDict = {}
+   for pos in office[1:]:
+      currPos = pos.split('\n')
+      subDict[currPos[1]] = currPos[0]
+   posDict["Officers"] = subDict
+   posDict["Contact"] = getPolyAppDevContact()
+   return posDict
+
+def getPolyAppDevContact():
+   url = "http://www.polyappdev.club"
+   myRequest = requests.get(url)
+   i = 0
+   soup = BeautifulSoup(myRequest.text, "html.parser")
+   for Row in soup.find_all("div", {"class":"col-lg-12 text-center"}):
+      if (i==6):
+         return Row.text
+      i+=1
+
+
 
 
 r = requests.get(urls[15])
