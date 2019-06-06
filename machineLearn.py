@@ -16,6 +16,7 @@ StatYear = ["2017-2018", "2018-2019"]
 StatTutorType = ["General", "Private"]
 CSCClass = ["101", "202", "203", "225", "141", "357", "123" "234", "349"]
 hasTwo = False
+hasVar = False
 varDict = {
    "CSSESTATClubOrgName": ClubNames,
    "OfficerRole": OfficerRoles,
@@ -38,6 +39,7 @@ for line in lineList:
       nameList = []
       print(rqSplit[i])
       if (rqSplit[i][0] == '['):
+         hasVar = True
          offSet = 1
          if (rqSplit[i][len(rqSplit[i])-1] == '?' or rqSplit[i][len(rqSplit[i])-1] == '.'):
             offSet = 2
@@ -56,4 +58,6 @@ for line in lineList:
             if hasTwo == False:
                Questlist.append(' '.join(nameList))
                hasTwo = False
+      else:
+         Questlist.append(' '.join(rqSplit))
 print(Questlist)
