@@ -15,7 +15,6 @@ StatYear = ["2017-2018", "2018-2019"]
 
 StatTutorType = ["General", "Private"]
 CSCClass = ["101", "202", "203", "225", "141", "357", "123" "234", "349"]
-
 hasTwo = False
 varDict = {
    "CSSESTATClubOrgName": ClubNames,
