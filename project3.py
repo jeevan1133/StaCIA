@@ -4,20 +4,25 @@ from database import *
 import functools
 
 
-def debug(func):
+DEBUG = False
+
+
+def debug(debug=False):
     """Print the function signature and return value"""
+    def decorator(func):
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            if debug:
+                print(f"Calling {func.__name__.upper()}")
+                print(func(*args, **kwargs))
+            return func(*args, **kwargs)
 
-    @functools.wraps(func)
-    def wrapper_debug(*args, **kwargs):
-        print(f"Calling {func.__name__}")
-        value = func(*args, **kwargs)
-        print(value)
-        return value
+        return wrapper
 
-    return wrapper_debug
+    return decorator
 
 
-@debug
+@debug(debug=DEBUG)
 def insert_info_into_clubs(club, about, contact, website, depart):
     stmt = "INSERT INTO club ( cname, clubDescription, website, department, generalEmail) \
             VALUES (\"{}\", \"{}\", \"{}\", \"{}\", \"{}\");"
@@ -26,7 +31,7 @@ def insert_info_into_clubs(club, about, contact, website, depart):
     return stmt
 
 
-@debug
+@debug(debug=DEBUG)
 def insert_into_president(club, email, phone):
     stmt = "INSERT INTO clubPresidentContact (cname, email, phone) \
             VALUES (\"{}\", \"{}\", \"{}\");"
@@ -34,7 +39,8 @@ def insert_into_president(club, email, phone):
     insert_into(stmt)
     return stmt
 
-@debug
+
+@debug(debug=DEBUG)
 def insert_advisors(club, val):
     try:
         advisor = val['Officers']['Advisor']
@@ -45,8 +51,8 @@ def insert_advisors(club, val):
                 advisors = '\t'.join(advisor.split('\n'))
                 email = phone = None
                 stmt = "INSERT INTO clubAdvisorContact (cname, advisorName, advisorEmail, advisorPhone) \
-                                               VALUES  (\"{}\", \"{}\", \"{}\", \"{}\");"
-                stmt = stmt.format(club, advisors, email, phone)
+                            VALUES  (\"{}\", \"{}\", \"{}\", \"{}\");"
+                stmt = stmt.format(club, advisor, email, phone)
                 insert_into(stmt)
                 return stmt
         except:
@@ -98,7 +104,8 @@ def get_officers_from_val(club, val):
         stmts.append(stmt)
     return stmts
 
-@debug
+
+@debug(debug=DEBUG)
 def insert_club_officers(club, val):
     terms = []
     for k, v in val.items():
@@ -131,7 +138,7 @@ def slo_hacks_schedule(club, schedules):
     return stmts
 
 
-@debug
+@debug(debug=DEBUG)
 def insert_into_club_schedule(club, val):
     try:
         schedules = val['Schedule']
@@ -151,7 +158,7 @@ def insert_into_club_schedule(club, val):
     return stmts
 
 
-@debug
+@debug(debug=DEBUG)
 def add_to_extra_dump(stat_clubs):
     stmts = []
     for club, extra in stat_clubs.items():
@@ -170,13 +177,15 @@ def insert_into_clubs():
     url = "http://www.cosam.calpoly.edu/content/student_orgs"
     stat_clubs = statistics_deparment_info(url)
     csc_clubs = get_csc_clubs()
-    stat_clubs.update(csc_clubs)
+    if csc_clubs:
+        stat_clubs.update(csc_clubs)
+    else:
+        pass
     terms = [name for name in stat_club_info.keys() if name.startswith("20")]
     for idx, term in enumerate(terms):
         stat_clubs["STAT Club"][term] = {}
         stat_clubs["STAT Club"][term].update(stat_club_info[term])
-    insert_advisors("STAT Club", stat_club_info)
-    stat_club_info.pop("Advisors", None)
+    stat_advisor_contact = stat_clubs['STAT Club']['Advisors']
     stat_clubs['STAT Club'].update(stat_club_info)
     for club, val in stat_clubs.items():
         about = val['About']
@@ -203,6 +212,8 @@ def insert_into_clubs():
         stat_clubs[club].pop('Officers', None)
         insert_into_club_schedule(club, val)
         stat_clubs[club].pop('Schedule', None)
+
+    #stat_club_info.pop("Advisors", None)
     return add_to_extra_dump(stat_clubs)
 
 
@@ -228,7 +239,7 @@ def extract_tutoring_info(p):
     return tutoring_center_info
 
 
-@debug
+@debug(debug=DEBUG)
 def extract_tutoring_center(url):
     soup = get_soup(url)
     tutoring_center = dict()
@@ -238,7 +249,7 @@ def extract_tutoring_center(url):
     return center
 
 
-@debug
+@debug(debug=DEBUG)
 def add_tutors(tutors):
     stmts = []
     for k, tutor in tutors.items():
@@ -250,7 +261,7 @@ def add_tutors(tutors):
     return stmts
 
 
-@debug
+@debug(debug=DEBUG)
 def insert_into_tutorSchedule(time_day_people, map_tutors):
     tutors = list(map(operator.itemgetter(2), time_day_people))
     stmts = []
@@ -265,14 +276,14 @@ def insert_into_tutorSchedule(time_day_people, map_tutors):
     return stmts
 
 
-@debug
+@debug(debug=DEBUG)
 def add_tutors_and_schedules():
     tutors, time_day = tutoring_csc()
     add_tutors(tutors)
     return insert_into_tutorSchedule(time_day, tutors)
 
 
-@debug
+@debug(debug=DEBUG)
 def add_to_tutorClasses(classes):
     stmts = []
     for class_ in classes:
@@ -283,7 +294,7 @@ def add_to_tutorClasses(classes):
     return stmts
 
 
-if __name__=="__main__":
+if __name__ == "__main__":
     insert_into_clubs()
     url = "https://statistics.calpoly.edu/content/tutoring"
     stat_tutoring = extract_stat_tutoring(url)
