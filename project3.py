@@ -179,7 +179,7 @@ def add_to_extra_dump(stat_clubs):
 
 def insert_into_clubs():
     url = "https://statistics.calpoly.edu/content/statclub"
-    stat_club_info = extract_statistics_deparment_info(url)
+    stat_club_info = extract_statistics_department_info(url)
     url = "http://www.cosam.calpoly.edu/content/student_orgs"
     stat_clubs = statistics_deparment_info(url)
     csc_clubs = get_csc_clubs()
@@ -303,7 +303,7 @@ def add_to_tutorClasses(classes):
 
 
 def insert_into_questions_table():
-    file_name = "/Users/JeevanBasnet/Downloads/Questions.txt"
+    file_name = "/Users/JeevanBasnet/PycharmProjects/Project3/Questions.txt"
     f = open(file_name, 'r', encoding='utf-8')
     for idx, line in enumerate(f):
         questions = line.split('|')
@@ -317,26 +317,29 @@ def insert_into_questions_table():
     return None
 
 
-
 def get_tuples_format(ans, res):
+    result = list(res.values())
     placeholders =re.findall(r'\{(.*?)\}', ans)
-    return {i: j for i, j in zip(ans, list(res.values)}
+    return {i: j for i, j in zip(placeholders, result)}
+    #re#
 
 
 def get_answer_from_query(query, args):
     result = None
     record = get_sql_statement_from_query(query)
+    print("RECORD IS {}".format(record))
+    if not record:
+        return
     sql_stmt = record['statement']
     answer_format = record['answers']
     answers = answer_format.split('\t')
-    for stmt in sql_stmt.split('\t'):
+    for idx, stmt in enumerate(sql_stmt.split('\t')):
         stmt = stmt.format(*args)
         result = check_if_answer_exists(stmt)
         if result:
-            #print(answers[0].format(*(list(result.values()))))
-            print(answers[0].format(**get_tuples_format(answers[0], result))
+            print(answers[idx].format(**get_tuples_format(answers[0], result)))
     if not result:
-        print(answers[1].format(*reversed(args)))
+        print(answers[-1].format(*(args)))
 
 
 if __name__ == "__main__":
@@ -368,8 +371,10 @@ if __name__ == "__main__":
     #args = ("President", "STAT Club")
     #question = "Who are some private tutors for Statistics?"
     #args = ("STAT Club")
-    question= "What Projects does [CSSESTATClub] have?"
-    args=(["Cal Poly Robotics Club"])
+    #question= "What Projects does [CSSESTATClub] have?"
+    #args=(["Cal Poly Robotics Club"])
+    question = "Who is the [StatYear] Treasurer for the [CSSESTATClub]?"
+    args = ("2017", "STAT Club")
     get_answer_from_query(question, args)
 
     #print(got)
