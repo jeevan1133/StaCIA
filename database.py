@@ -1,5 +1,6 @@
-import pymysql.cursors
 import sys
+import pymysql.cursors
+from project3 import debug
 
 conn = None
 database = None
@@ -17,11 +18,11 @@ def make_connection(database, user, password):
                            cursorclass=pymysql.cursors.DictCursor)
 
 
-def insert_into(stmt):
+def insert_into(stmt, line_num=None):
     global conn
     if conn is None:
         get_connection()
-    print(stmt)
+    #print(line_num, stmt)
     with conn.cursor() as cursor:
         cursor.execute(stmt)
     conn.commit()
@@ -61,7 +62,39 @@ def get_connection():
     return database, user, password
 
 
-def abcd():
+@debug(debug=True)
+def get_sql_statement_from_query(query):
+    sql = "SELECT * FROM questions \
+          WHERE questions LIKE '%{}%'"
+    sql = sql.format(query)
+    sql_stmt = get_sql_statement(sql)
+    return sql_stmt
+
+
+def get_sql_statement(sql):
+    global conn
+    if conn is None:
+        get_connection()
+    with conn.cursor() as cursor:
+        cursor.execute(sql)
+        result = cursor.fetchone()
+        if result:
+            return result
+        else:
+            return None
+
+@debug(debug=True)
+def check_if_answer_exists(sql_stmt):
+    global conn
+    with conn.cursor() as cursor:
+        cursor.execute(sql_stmt)
+        result = cursor.fetchone()
+        if result:
+            return result
+    return False
+
+
+def __do_not_use():
     get_connection()
     create_tables(database, user, password, sys.argv[2])
     conn.close()
