@@ -4,7 +4,7 @@ from database import *
 import functools
 
 
-DEBUG = False
+DEBUG = True
 
 
 def debug(debug=False):
@@ -14,8 +14,8 @@ def debug(debug=False):
         def wrapper(*args, **kwargs):
             if debug:
                 print(f"Calling {func.__name__.upper()}")
-                print(func(*args, **kwargs))
-            return func(*args, **kwargs)
+                value = func(*args, **kwargs)
+            return value
 
         return wrapper
 
@@ -162,12 +162,18 @@ def insert_into_club_schedule(club, val):
 def add_to_extra_dump(stat_clubs):
     stmts = []
     for club, extra in stat_clubs.items():
-        for keyword, data in extra.items():
+        try:
+            for keyword, data in extra.items():
+                stmt = "INSERT INTO clubExtraDump (cname, keywords, data) \
+                    VALUES (\"{}\", \"{}\", \"{}\");"
+                stmt = stmt.format(club, keyword, data)
+                insert_into(stmt)
+                stmts.append(stmt)
+        except Exception:
             stmt = "INSERT INTO clubExtraDump (cname, keywords, data) \
-                VALUES (\"{}\", \"{}\", \"{}\");"
-            stmt = stmt.format(club, keyword, data)
+                               VALUES (\"{}\", \"{}\", \"{}\");"
+            stmt = stmt.format("STAT Club", club, extra)
             insert_into(stmt)
-            stmts.append(stmt)
     return stmts
 
 
@@ -185,7 +191,8 @@ def insert_into_clubs():
     for idx, term in enumerate(terms):
         stat_clubs["STAT Club"][term] = {}
         stat_clubs["STAT Club"][term].update(stat_club_info[term])
-    stat_advisor_contact = stat_clubs['STAT Club']['Advisors']
+    stat_advisor_contact = {"Advisors": stat_club_info['Advisors']}
+    del stat_club_info['Advisors']
     stat_clubs['STAT Club'].update(stat_club_info)
     for club, val in stat_clubs.items():
         about = val['About']
@@ -201,19 +208,20 @@ def insert_into_clubs():
             email = val['Officers']['President']['Email']
             phone = val['Officers']['President']['Phone']
             insert_into_president(club, email, phone)
-        except:
+        except Exception:
             pass
         insert_advisors(club, val)
         stat_clubs[club].pop('Advisors', None)
         terms = insert_club_officers(club, val)
         if terms:
-            for term in terms:
-                stat_clubs[club].pop(term, None)
+           for term in terms:
+               stat_clubs[club].pop(term, None)
         stat_clubs[club].pop('Officers', None)
         insert_into_club_schedule(club, val)
         stat_clubs[club].pop('Schedule', None)
 
-    #stat_club_info.pop("Advisors", None)
+    stat_club_info.pop("Advisors", None)
+    add_to_extra_dump(stat_advisor_contact)
     return add_to_extra_dump(stat_clubs)
 
 
@@ -294,6 +302,37 @@ def add_to_tutorClasses(classes):
     return stmts
 
 
+@debug(DEBUG)
+def insert_into_questions_table():
+    file_name = "/Users/JeevanBasnet/Downloads/Questions.txt"
+    f = open(file_name, 'r', encoding='utf-8')
+    for idx, line in enumerate(f):
+        questions = line.split('|')
+        qstn = questions[1].strip()
+        answer = questions[2].strip()
+        stmt = questions[3].strip()
+        sql_stmt = 'INSERT INTO questions (questions, answers, statement) \
+                    VALUES ( "{}", "{}", "{}")'
+        sql = sql_stmt.format(qstn, answer, stmt)
+        insert_into(sql, line_num=idx+1)
+    return None
+
+
+def get_answer_from_query(query, args):
+    result = None
+    record = get_sql_statement_from_query(query)
+    sql_stmt = record['statement']
+    answer_format = record['answers']
+    answers = answer_format.split('\t')
+    for stmt in sql_stmt.split('\t'):
+        stmt = stmt.format(*args)
+        result = check_if_answer_exists(stmt)
+        if result:
+            print(answers[0].format(*(list(result.values()))))
+    if not result:
+        print(answers[1].format(*reversed(args)))
+
+
 if __name__ == "__main__":
     insert_into_clubs()
     url = "https://statistics.calpoly.edu/content/tutoring"
@@ -301,7 +340,7 @@ if __name__ == "__main__":
     add_to_tutor_extra_dump(stat_tutoring)
 
     url = "http://tutoring.csc.calpoly.edu/schedule/"
-    add_to_tutor_extra_dump(extract_tutoring_center(url))
+    add_to_tutor_extra_dump(extract_tutoring_center(url),cname="CSSE")
 
     add_tutors_and_schedules()
 
@@ -309,3 +348,24 @@ if __name__ == "__main__":
     classes, extra_dump = get_csc_tutor_info(url)
     add_to_tutorClasses(classes)
     add_to_tutor_extra_dump(extra_dump, "CSSE")
+
+    ### We have added all the information we need.
+    ### Create a table and insert the sql statements.
+
+    insert_into_questions_table()
+
+    ## For a question provided by a classifier
+    ## Assuming we get a question
+    # query = get_query_from_input()
+    #question = "Is there a [OfficerRole] position in [CSSESTATClubOrgName]"
+    # @args: extracted from query
+    #args = ("President", "STAT Club")
+    #question = "Who are some private tutors for Statistics?"
+    #args = ("STAT Club")
+    question= "What Projects does [CSSESTATClub] have?"
+    args=(["Cal Poly Robotics Club"])
+    get_answer_from_query(question, args)
+
+    #print(got)
+
+
