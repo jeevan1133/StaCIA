@@ -320,8 +320,8 @@ def insert_into_questions_table():
 def get_answer_from_query(query, args):
     result = None
     record = get_sql_statement_from_query(query)
-    sql_stmt = record['statement']
-    answer_format = record['answers']
+    sql_stmt = record[0]['statement']
+    answer_format = record[0]['answers']
     answers = answer_format.split('\t')
     for stmt in sql_stmt.split('\t'):
         stmt = stmt.format(*args)
