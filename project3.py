@@ -302,7 +302,6 @@ def add_to_tutorClasses(classes):
     return stmts
 
 
-@debug(DEBUG)
 def insert_into_questions_table():
     file_name = "/Users/JeevanBasnet/Downloads/Questions.txt"
     f = open(file_name, 'r', encoding='utf-8')
