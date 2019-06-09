@@ -1,3 +1,16 @@
+drop table clubOfficers;
+drop table clubExtraDump;
+drop table clubPresidentContact;
+drop table clubAdvisorContact;
+drop table clubSchedule;
+drop table club;
+drop table tutorSchedule;
+drop table tutorExtraDump;
+drop table department;
+drop table tutor;
+drop table tutorClasses;
+drop table questions;
+
 create table if not exists club(
   cname varchar(200),
   clubDescription varchar(3000),
@@ -89,3 +102,15 @@ create table if not exists tutorExtraDump(
   keywords varchar(200),
   data varchar(5000),
   primary key (extraid)) engine=InnoDB;
+
+
+create table if not exists tutorClasses(
+  classid integer auto_increment,
+  name varchar(200),
+  department varchar(200) default "CSSE",
+  primary key (classid)) engine=InnoDB;
+
+create table if not exists questions (
+  questions varchar(2000),
+  answers varchar(5000),
+  statement varchar(5000)) engine=InnoDB;
