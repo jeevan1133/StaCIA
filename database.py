@@ -1,6 +1,6 @@
 import sys
 import pymysql.cursors
-from project3 import debug
+
 
 conn = None
 database = None
@@ -62,7 +62,7 @@ def get_connection():
     return database, user, password
 
 
-@debug(debug=True)
+
 def get_sql_statement_from_query(query):
     sql = "SELECT * FROM questions \
           WHERE questions LIKE '%{}%'"
@@ -83,7 +83,7 @@ def get_sql_statement(sql):
         else:
             return None
 
-@debug(debug=True)
+
 def check_if_answer_exists(sql_stmt):
     global conn
     with conn.cursor() as cursor:
