@@ -1,6 +1,7 @@
-from database import *
-from bs4 import element
+
 import re
+from bs4 import element
+from database import *
 from CSC import get_soup
 
 urls = [ "https://statistics.calpoly.edu/content/statclub",
