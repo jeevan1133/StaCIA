@@ -317,6 +317,12 @@ def insert_into_questions_table():
     return None
 
 
+
+def get_tuples_format(ans, res):
+    placeholders =re.findall(r'\{(.*?)\}', ans)
+    return {i: j for i, j in zip(ans, list(res.values)}
+
+
 def get_answer_from_query(query, args):
     result = None
     record = get_sql_statement_from_query(query)
@@ -327,7 +333,8 @@ def get_answer_from_query(query, args):
         stmt = stmt.format(*args)
         result = check_if_answer_exists(stmt)
         if result:
-            print(answers[0].format(*(list(result.values()))))
+            #print(answers[0].format(*(list(result.values()))))
+            print(answers[0].format(**get_tuples_format(answers[0], result))
     if not result:
         print(answers[1].format(*reversed(args)))
 
