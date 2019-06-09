@@ -1,7 +1,6 @@
 
 import re
 from bs4 import element
-from database import *
 from CSC import get_soup
 
 urls = [ "https://statistics.calpoly.edu/content/statclub",
@@ -37,7 +36,7 @@ def _get_officers(info):
     return officers, None
 
 
-def extract_statistics_deparment_info(url):
+def extract_statistics_department_info(url):
     soup = get_soup(url)
     main_content = soup.find('div', class_='field-items')
     stat_club = {}
