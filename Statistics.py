@@ -39,7 +39,6 @@ def _get_officers(info):
 def extract_statistics_deparment_info(url):
     soup = get_soup(url)
     main_content = soup.find('div', class_='field-items')
-    #stat_info = main_content.find_next('p')
     stat_club = {}
     titles = {
         "Upcoming Events": _get_upcoming_events,
@@ -50,10 +49,16 @@ def extract_statistics_deparment_info(url):
     for title in main_content.find_all('h2'):
         function = titles.get(title.string.strip())
         if "2017-2018" in title.string:
-            stat_club["2017-2018 STAT Club Officers"], _ = _get_officers(title.find_next_sibling())
+            stat_club["2017-2018"], _ = _get_officers(title.find_next_sibling())
         if function:
             info, link = function(title.find_next_sibling())
-            stat_club[title.string] = info
+            key = title.string
+            if "2018-2019" in key:
+                key = "2018-2019"
+            elif "Upcoming Events" in key:
+                key = "Events"
+            stat_club[key] = info
+
             if link:
                 stat_club['signup_for_mentor'] = link[1][:-1]
                 stat_club['signup_for_classes'] = link[0][:-1]
@@ -121,7 +126,7 @@ def statistics_deparment_info(url):
         clubs[stat_clubs[idx]]['Contact'] = contacts[stat_clubs[idx]]
         clubs[stat_clubs[idx]]['Website'] = club
         clubs[stat_clubs[idx]]['Department'] = "STAT"
-        clubs[stat_clubs[idx]]['Location'] = "N/A"
+        clubs[stat_clubs[idx]]['Location'] = None
     clubs_president = [data_science, stat_club]
     for idx, c in enumerate(stat_clubs):
         clubs[c]['Officers'] = {}
@@ -148,15 +153,3 @@ def extract_stat_tutoring(url):
     stat_tutoring['Tutor Hours'] = tutor_hours
     return stat_tutoring
 
-
-def main():
-    stat_club = extract_statistics_deparment_info(urls[0])
-    tutor_club = statistics_deparment_info(urls[1])
-    tutor_club['STAT Club'].update(stat_club)
-    del stat_club
-    stat_tutoring = extract_stat_tutoring(urls[2])
-    pass
-
-
-if __name__=="__main__":
-    main()
