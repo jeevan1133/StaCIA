@@ -1,7 +1,8 @@
-from bs4 import BeautifulSoup
+import operator
 import requests
 import re
-import operator
+from bs4 import BeautifulSoup
+
 
 urls = ["http://tutoring.csc.calpoly.edu/",
         "https://csc.calpoly.edu/clubs/",
@@ -46,7 +47,7 @@ def extract_from_acm(clubs):
 
 def extract_info_from_wish(soup):
     wish = {}
-    wish['Location'] = "N/A"
+    wish['Location'] = None
     wish['Department'] = "CSSE"
     wish['About'] = soup.find('h2').find_next().text.strip()
     wish['Contact'] = soup.find('div', class_='text-right').a.text.strip()
@@ -177,7 +178,7 @@ def extract_from_CPLUG(clubs):
     email = h3.find_next_sibling().text.strip()
     email = re.search(r'(\w+)@(\w+).(\w+)', email).group()
     clubs[club]['Contact'] = email
-    clubs[club]['Location'] = "N/A"
+    clubs[club]['Location'] = None
     clubs[club]['Department'] = "CSSE"
     url = "http://cplug.org/projects.html"
     soup = get_soup(url)
@@ -244,7 +245,7 @@ def extract_from_CPADC(clubs):
     club = list(clubs.keys())[-1]
     url = "https://www." + clubs[club]['Website']
     soup = get_soup(url)
-    clubs[club]['Location'] = "N/A"
+    clubs[club]['Location'] = None
     for div in soup.find_all('div', class_='text-center'):
         if div.find('i', class_='sr-contact'):
             clubs[club]['Contact'] = div.text.strip()
@@ -289,7 +290,8 @@ def extract_from_robotics(clubs):
     clubs[club]['About'] = about
     clubs[club]['Department'] = "CSSE"
     projects = list(soup.find('div',class_='subnav').stripped_strings)[:-1]
-    clubs[club]['Projects'] = projects
+    projects.insert(len(projects)-1, 'and')
+    clubs[club]['Projects'] = ', '.join(projects)
     clubs[club]['Location'] = soup.find('footer').text.strip().split('-',1)[-1].strip()
     clubs[club]['Meeting'] = get_meetings()
     url = "https://www.calpolyrobotics.com/contact"
@@ -404,7 +406,7 @@ def extract_csc_tutoring_hours(url):
     soup = get_soup(url)
     days = [day.text for day in soup.find_all('th', class_='column-label')]
     time_day = get_schedules(soup, days)
-    print(time_day)
+
     return insert_into_tutorSchedule(time_day), time_day
 
 
