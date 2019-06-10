@@ -1,6 +1,7 @@
 from CSC import *
 from Statistics import *
 from database import *
+from machineLearn import *
 import functools
 
 
