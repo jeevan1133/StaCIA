@@ -16,8 +16,8 @@ def debug(debug=False):
             if debug:
                 print(f"Calling {func.__name__.upper()}")
                 value = func(*args, **kwargs)
-            return value
-
+            else:
+                func(*args, **kwargs)
         return wrapper
 
     return decorator
@@ -339,8 +339,9 @@ def get_answer_from_query(query, args):
         result = check_if_answer_exists(stmt)
         if result:
             print(answers[idx].format(**get_tuples_format(answers[0], result[0])))
+            break
     if not result:
-        print(answers[-1].format(*args))
+        print(answers[-1])
 
 
 def get_club_names():
