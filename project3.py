@@ -4,7 +4,7 @@ from database import *
 import functools
 
 
-DEBUG = True
+DEBUG = False
 
 
 def debug(debug=False):
@@ -302,9 +302,9 @@ def add_to_tutorClasses(classes):
     return stmts
 
 
-def insert_into_questions_table():
-    file_name = "/Users/JeevanBasnet/PycharmProjects/Project3/Questions.txt"
+def insert_into_questions_table(file_name):
     f = open(file_name, 'r', encoding='utf-8')
+    variables = []
     for idx, line in enumerate(f):
         questions = line.split('|')
         qstn = questions[1].strip()
@@ -313,46 +313,71 @@ def insert_into_questions_table():
         sql_stmt = 'INSERT INTO questions (questions, answers, statement) \
                     VALUES ( "{}", "{}", "{}")'
         sql = sql_stmt.format(qstn, answer, stmt)
+        variables.append(re.findall(r'\[(.*?)\]', questions[1]))
         insert_into(sql, line_num=idx+1)
-    return None
+    f.close()
+    return
 
 
 def get_tuples_format(ans, res):
     result = list(res.values())
-    placeholders =re.findall(r'\{(.*?)\}', ans)
+    placeholders = re.findall(r'\{(.*?)\}', ans)
     return {i: j for i, j in zip(placeholders, result)}
-    #re#
 
 
 def get_answer_from_query(query, args):
     result = None
     record = get_sql_statement_from_query(query)
-    print("RECORD IS {}".format(record))
     if not record:
         return
     sql_stmt = record['statement']
     answer_format = record['answers']
     answers = answer_format.split('\t')
     for idx, stmt in enumerate(sql_stmt.split('\t')):
-        stmt = stmt.format(*args)
+        stmt = stmt.format(**args)
         result = check_if_answer_exists(stmt)
         if result:
-            print(answers[idx].format(**get_tuples_format(answers[0], result)))
+            print(answers[idx].format(**get_tuples_format(answers[0], result[0])))
     if not result:
-        print(answers[-1].format(*(args)))
+        print(answers[-1].format(*args))
 
 
-if __name__ == "__main__":
+def get_club_names():
+    sql = "SELECT `cname`, `department` from club;"
+    result = check_if_answer_exists(sql)
+    club_names = {}
+    for record in result:
+        club_names[record['cname']] = record['department']
+
+    return club_names
+
+
+def get_variable_mapping(variables_to_substitute_for, varibales_dict, query):
+    present = False
+    args = {}
+    term = None
+    for variable in variables_to_substitute_for:
+        present = False
+        for term in varibales_dict.get(variable):
+            if term in query:
+                present = True
+                args[variable] = term
+                break
+        #if present:
+    return present, args
+
+
+def main():
     insert_into_clubs()
     url = "https://statistics.calpoly.edu/content/tutoring"
     stat_tutoring = extract_stat_tutoring(url)
     add_to_tutor_extra_dump(stat_tutoring)
-
+    
     url = "http://tutoring.csc.calpoly.edu/schedule/"
-    add_to_tutor_extra_dump(extract_tutoring_center(url),cname="CSSE")
-
+    add_to_tutor_extra_dump(extract_tutoring_center(url), cname="CSSE")
+    
     add_tutors_and_schedules()
-
+    
     url = "http://tutoring.csc.calpoly.edu/"
     classes, extra_dump = get_csc_tutor_info(url)
     add_to_tutorClasses(classes)
@@ -360,23 +385,40 @@ if __name__ == "__main__":
 
     ### We have added all the information we need.
     ### Create a table and insert the sql statements.
+    question_answer = "/Users/JeevanBasnet/PycharmProjects/Project3/Questions.txt"
+    list_of_classes = [v for x in check_if_answer_exists("SELECT `name` FROM tutorClasses") for k,v in x.items()]
+    club_officers = list(set([v for x in check_if_answer_exists("SELECT `title` FROM clubOfficers") for k,v in x.items()]))
+    tutors =[v for x in check_if_answer_exists("SELECT `name` FROM tutor") for k,v in x.items()]
+    days = list(set([v for x in check_if_answer_exists("SELECT `dayOfTheWeek` FROM tutorSchedule") for k,v in x.items()]))
+    club_names = get_club_names()
 
-    insert_into_questions_table()
+    variables = {'CSCClassName': list_of_classes + ["ACM", "CPGD", "CPLUG"],
+         'CSSE': "CSSE",
+         'CSSESTAT': ["CSSE","STAT"],
+         'CSSESTATClassName': ["CSC", "STAT"],
+         'CSSESTATClub': list(club_names.keys()),
+         'Day': days,
+         'Linux':["Linux","Windows","Unix"],
+         'OfficerRole': club_officers,
+         'Professor': None,
+         'STATCLASSName': "STAT",
+         'StatYear': ['2017', '2018'],
+         'Tutorname':tutors,
+         'programming language':['R','Java','C','Python','Haskell']
+        }
+    insert_into_questions_table(question_answer)
+    while True:
+        query = "Who is the 2017 Treasurer for the STAT Club?"
+        question = "Who is the [StatYear] Treasurer for the [CSSESTATClub]?"
+        variables_to_substitute_for = re.findall(r'\[(.*?)\]', question)
+        cond, args = get_variable_mapping(variables_to_substitute_for, variables, query)
+        if not cond:
+            print("The answer to that question doesn't exist in the database")
 
-    ## For a question provided by a classifier
-    ## Assuming we get a question
-    # query = get_query_from_input()
-    #question = "Is there a [OfficerRole] position in [CSSESTATClubOrgName]"
-    # @args: extracted from query
-    #args = ("President", "STAT Club")
-    #question = "Who are some private tutors for Statistics?"
-    #args = ("STAT Club")
-    #question= "What Projects does [CSSESTATClub] have?"
-    #args=(["Cal Poly Robotics Club"])
-    question = "Who is the [StatYear] Treasurer for the [CSSESTATClub]?"
-    args = ("2017", "STAT Club")
-    get_answer_from_query(question, args)
+        get_answer_from_query(question, args)
 
-    #print(got)
+
+if __name__ == "__main__":
+    main()
 
 
