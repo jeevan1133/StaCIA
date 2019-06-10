@@ -1,8 +1,7 @@
-import operator
+from bs4 import BeautifulSoup
 import requests
 import re
-from bs4 import BeautifulSoup
-
+import operator
 
 urls = ["http://tutoring.csc.calpoly.edu/",
         "https://csc.calpoly.edu/clubs/",
@@ -335,18 +334,19 @@ def get_csc_clubs():
                      extract_from_SLOHacks
                      ]
     idx = 0
-    try:
-        for k, v in clubs_contact.items():
-            clubs[k] = {}
-            functions[k] = extract_clubs[idx]
-            idx += 1
-            clubs[k]['Website'] = v
+    for k, v in clubs_contact.items():
+        clubs[k] = {}
+        functions[k] = extract_clubs[idx]
+        idx += 1
+        clubs[k]['Website'] = v
+        try:
             function = functions.get(k)
             if function:
                 p = function(clubs)
-        return clubs
-    except:
-        pass
+        except Exception:
+            pass
+
+    return clubs
 
 
 def extract_tutoring_info(p):
