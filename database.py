@@ -1,5 +1,5 @@
-import sys
 import pymysql.cursors
+import sys
 
 
 conn = None
@@ -18,10 +18,28 @@ def make_connection(database, user, password):
                            cursorclass=pymysql.cursors.DictCursor)
 
 
+def get_tables():
+    global conn
+    with conn.cursor() as cursor:
+        cursor.execute("SHOW TABLES")
+        res = cursor.fetchone()
+        if res:
+            f = "/home/jbasnet466/Project3/makeTables.sql"
+            with open(f,'r') as f:
+                data = f.read()
+                data = data.split('\n')
+                for line in data:
+                    if line.strip():
+                        print(line)
+                        cursor.execute(line.strip())
+    conn.commit()
+
+
 def insert_into(stmt, line_num=None):
     global conn
     if conn is None:
         get_connection()
+        #get_tables()
     #print(line_num, stmt)
     with conn.cursor() as cursor:
         cursor.execute(stmt)
@@ -47,19 +65,18 @@ def read_info(file_name):
         d = f.readline().split(" ")[-1].strip()
         u = f.readline().split(" ")[-1].strip()
         p = f.readline().split(" ")[-1].strip()
-        return d, u, ''
+        return d, u, p
 
 
 def get_connection():
     global conn, database, user, password
     if len(sys.argv) == 1:
-        fileName = "/Users/JeevanBasnet/PycharmProjects/Project3/credentials.txt"
+       fileName = "/home/jbasnet466/Project3/credentials.txt"
     else:
-        fileName = sys.argv[1]
+       fileName = sys.argv[1]
     database, user, password = read_info(fileName)
 
     make_connection(database, user, password)
-    return database, user, password
 
 
 
@@ -86,15 +103,13 @@ def get_sql_statement(sql):
 
 def check_if_answer_exists(sql_stmt):
     global conn
+    if not conn:
+       #d,b,p = read_info('/home/jbasnet466/Project3/credentials.txt')
+       #make_connection(d,b,p)
+       get_connection()
     with conn.cursor() as cursor:
         cursor.execute(sql_stmt)
-        result = cursor.fetchone()
+        result = cursor.fetchall()
         if result:
             return result
     return False
-
-
-def __do_not_use():
-    get_connection()
-    create_tables(database, user, password, sys.argv[2])
-    conn.close()
