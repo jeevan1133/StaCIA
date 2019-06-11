@@ -92,7 +92,6 @@ A2|Who is the current president of [CSSESTATClub]?|The president for {cname} is 
 A2|What projects does [CSSESTATClub] have?|You can get involved in {data}\tThey don't have any projects updated yet.|SELECT `data` FROM `clubExtraDump` WHERE `keywords` = \"Projects\" AND `cname` LIKE '%{CSSESTATClub}%';
 A2|When does [CSSESTATClub] club meet?|{data}\tThey don't have it posted. You may want to try again later.|SELECT `data` FROM `clubExtraDump` WHERE `cname` LIKE '%{CSSESTATClub}%';
 A2|If I want to get [Linux] on my computer who can help me?|You should contact {cname}\tContact CPGD for more information.|SELECT `cname` FROM `club` WHERE `clubDescription` LIKE '%{Linux}%';;
-A2|When does [CSSESTATClub] meet?|They meet on {data}\tThey don't have it posted yet. You may want to try again later.|SELECT `data` FROM `tutorExtraDump` WHERE `cname` LIKE '%{CSSESTATClub}%' AND `keywords` = \"Meeting\";
 A2|When does [CSSESTATClub] meet?|They meet on {data}\tThey don't have it posted. You may want to try again later.|SELECT `data` FROM `tutorExtraDump` WHERE `cname` LIKE '%{CSSESTATClub}%' AND `keywords` = \"Meeting\";
 A2|What room does [CSSESTATClub] meet?|They meet at {data}\tThey don't have it posted. You may want to try again later.|SELECT `data` FROM `tutorExtraDump` WHERE `cname` LIKE '%{CSSESTATClub}%' AND `keywords` = \"Location\";
 A2|Where does [CSSESTATClub] meet?|{data}\tThey don't have it posted. You may want to try again later.|SELECT `data` FROM `tutorExtraDump` WHERE `cname` LIKE '%{CSSESTATClub}%';
