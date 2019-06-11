@@ -1,11 +1,10 @@
-import functools
 from CSC import *
 from Statistics import *
 from database import *
+import functools
 from machineLearn import *
 
-
-DEBUG = False
+DEBUG = True
 
 
 def debug(debug=False):
@@ -16,8 +15,10 @@ def debug(debug=False):
             if debug:
                 print(f"Calling {func.__name__.upper()}")
                 value = func(*args, **kwargs)
+                return value
             else:
-                func(*args, **kwargs)
+               func(*args, **kwargs)
+
         return wrapper
 
     return decorator
@@ -363,7 +364,8 @@ def get_variable_mapping(variables_to_substitute_for, varibales_dict, query):
         if variable.capitalize() == "Professor" or variable.capitalize() == "CSSE":
             present = True
         for term in varibales_dict.get(variable):
-            if term in query:
+            found = re.search(term, query, re.IGNORECASE)
+            if found:
                 present = True
                 args[variable] = term
                 break
@@ -371,73 +373,63 @@ def get_variable_mapping(variables_to_substitute_for, varibales_dict, query):
 
 
 def main():
-    insert_into_clubs()
-    url = "https://statistics.calpoly.edu/content/tutoring"
-    stat_tutoring = extract_stat_tutoring(url)
-    add_to_tutor_extra_dump(stat_tutoring)
+    test = False
+    if not test:
+       insert_into_clubs()
+       url = "https://statistics.calpoly.edu/content/tutoring"
+       stat_tutoring = extract_stat_tutoring(url)
+       add_to_tutor_extra_dump(stat_tutoring)
 
-    url = "http://tutoring.csc.calpoly.edu/schedule/"
-    add_to_tutor_extra_dump(extract_tutoring_center(url), cname="CSSE")
+       url = "http://tutoring.csc.calpoly.edu/schedule/"
+       add_to_tutor_extra_dump(extract_tutoring_center(url), cname="CSSE")
 
-    add_tutors_and_schedules()
+       add_tutors_and_schedules()
 
-    url = "http://tutoring.csc.calpoly.edu/"
-    classes, extra_dump = get_csc_tutor_info(url)
-    add_to_tutorClasses(classes)
-    add_to_tutor_extra_dump(extra_dump, "CSSE")
+       url = "http://tutoring.csc.calpoly.edu/"
+       classes, extra_dump = get_csc_tutor_info(url)
+       add_to_tutorClasses(classes)
+       add_to_tutor_extra_dump(extra_dump, "CSSE")
 
-    ### We have added all the information we need.
-    ### Create a table and insert the sql statements.
-    question_answer = "/Users/JeevanBasnet/PycharmProjects/Project3/Questions.txt"
+       ### We have added all the information we need.
+       ### Create a table and insert the sql statements.
+       question_answer = "/home/jbasnet466/Project3/Questions.txt"
+       insert_into_questions_table(question_answer)
     list_of_classes = [v for x in check_if_answer_exists("SELECT `name` FROM tutorClasses") for k,v in x.items()]
     club_officers = list(set([v for x in check_if_answer_exists("SELECT `title` FROM clubOfficers") for k,v in x.items()]))
     tutors =[v for x in check_if_answer_exists("SELECT `name` FROM tutor") for k,v in x.items()]
     days = list(set([v for x in check_if_answer_exists("SELECT `dayOfTheWeek` FROM tutorSchedule") for k,v in x.items()]))
     club_names = get_club_names()
     list_of_clubs = list(club_names.keys())
+335         return
     list_of_clubs.extend(["ACM", "CPGD", "CPLUG"])
     variables = {'CSCClassName': list_of_classes,
-         'CSSE': "CSSE",
-         'CSSESTAT': ["CSSE","STAT"],
-         'CSSESTATClassName': ["CSSE", "STAT"],
-         'CSSESTATClub': list_of_clubs,
-         'Day': days,
-         'Linux':["Linux","Windows","Unix"],
-         'OfficerRole': club_officers,
-         'Professor': True,
-         'STATCLASSName': "STAT",
-         'StatYear': ['2017', '2018'],
-         'Tutorname': tutors,
-         'programming language': ['Java', 'C', 'Python']
-        }
+                 'CSSE': "CSSE",
+                 'CSSESTAT': ["CSSE","STAT"],
+                 'CSSESTATClassName': ["CSSE", "STAT"],
+                 'CSSESTATClub': list_of_clubs,
+                 'Day': days,
+                 'Linux':["Linux","Windows","Unix"],
+                 'OfficerRole': club_officers,
+                 'Professor': True,
+                 'STATCLASSName': "STAT",
+                 'StatYear': ['2017', '2018'],
+                 'Tutorname': tutors,
+                 'programming language': ['Java', 'C', 'Python']
+               }
 
-    insert_into_questions_table(question_answer)
 
-    ## For a question provided by a classifier
-    ## Assuming we get a question
-    # query = get_query_from_input()
-    # question = "Is there a [OfficerRole] position in [CSSESTATClubOrgName]"
-    # @args: extracted from query
-    # args = ("President", "STAT Club")
-    # question = "Who are some private tutors for Statistics?"
-    # args = ("STAT Club")
-    # question= "What Projects does [CSSESTATClub] have?"
-    # args=(["Cal Poly Robotics Club"])
-    #query = "Does CPGD have a Treasurer position?"
-    #query = "Who is the current Treasurer for ABCDClub?"
-    #question = "Who is the current [OfficerRole] for [CSSESTATClub]?"
-    query = "Who is the Treasurer of CPGD"
-    #question = "Does [CSSESTATClub] have a [OfficerRole] leadership position?"
-    question = "Who is the current [OfficerRole] for [CSSESTATClub]?"
-    variables_to_substitute_for = re.findall(r'\[(.*?)\]', question)
-    cond, args = get_variable_mapping(variables_to_substitute_for, variables, query)
-    # if not cond:
-    #     print("The answer to that question doesn't exist in the database")
-    # else:
-    get_answer_from_query(question, args)
+    clf = classTrain()
+    while True:
+       query = input("Please input string: ")
+       if query == "quit":
+          break
+       question = clf.classify(run(query))
+       print(question)
+       variables_to_substitute_for = re.findall(r'\[(.*?)\]', question)
+       cond, args = get_variable_mapping(variables_to_substitute_for, variables, query)
+       print(args)
+       get_answer_from_query(question, args)
 
 
 if __name__ == "__main__":
     main()
-
-
