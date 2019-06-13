@@ -1,6 +1,8 @@
+import re
 import nltk
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
+
 
 def run(inputQuestion,variables_dict=None):
   #ensw = stopwords.words("english")
