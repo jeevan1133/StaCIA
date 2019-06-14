@@ -324,9 +324,14 @@ def insert_into_questions_table(file_name):
 
 
 def get_tuples_format(ans, res):
-    result = list(res.values())
-    placeholders = re.findall(r'\{(.*?)\}', ans)
-    return {i: j for i, j in zip(placeholders, result)}
+    result = {}
+    for item in res:
+      for k, v in item.items():
+          if k not in result.keys():
+              result[k] = v
+          else:
+              result[k] = result[k] + ", " + v
+    return result
 
 
 def get_answer_from_query(query, args, orig_args=None):
